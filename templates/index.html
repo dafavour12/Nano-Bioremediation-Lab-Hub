@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nano-Bioremediation Simulator with Data Logging</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      @media print {
+        #sim-form,
+        #history-table-container,
+        .no-print,
+        button,
+        header a {
+          display: none !important;
+        }
+        body {
+          background-color: #ffffff !important;
+          color: #000000 !important;
+        }
+        .bg-slate-800,
+        .bg-slate-900 {
+          background-color: #f8fafc !important;
+          border: 1px solid #cbd5e1 !important;
+          color: #0f172a !important;
+        }
+        #nanoChart {
+          max-height: 400px !important;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-slate-900 text-slate-100 font-sans min-h-screen">
+    <div class="container mx-auto p-6">
+      <!-- Header -->
+      <header
+        class="flex justify-between items-center mb-8 border-b border-slate-800 pb-4"
+      >
+        <div>
+          <h1 class="text-3xl font-bold text-teal-400">
+            🔬 Nano-Bioremediation Lab Hub
+          </h1>
+          <p class="text-slate-400 text-sm">
+            Simulate, Compliance-Check & Export Wastewater Project Data
+          </p>
+        </div>
+        <div class="flex gap-2 no-print">
+          <button
+            onclick="exportCSV()"
+            class="bg-teal-700 hover:bg-teal-600 text-white text-xs font-bold py-2 px-4 rounded border border-teal-500 transition"
+          >
+            📥 Export Dataset (CSV)
+          </button>
+        </div>
+      </header>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Controls Sidebar -->
+        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+          <h2 class="text-xl font-semibold mb-4 text-teal-300">
+            New Simulation Run
+          </h2>
+          <form id="sim-form" class="space-y-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-300"
+                >Project / Tag Name</label
+              >
+              <input
+                type="text"
+                id="project_name"
+                value="Batch Test #1"
+                class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-slate-100"
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-slate-300"
+                >Target Contaminant</label
+              >
+              <select
+                id="contaminant_type"
+                class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-slate-200"
+              >
+                <option value="Lead (Pb)">Lead (Pb)</option>
+                <option value="Chromium (Cr)">Chromium (Cr)</option>
+                <option value="Arsenic (As)">Arsenic (As)</option>
+                <option value="Heavy Metals" selected>
+                  Heavy Metals (Pb, Cr, As)
+                </option>
+                <option value="Pharmaceuticals">
+                  Pharmaceuticals & Antibiotics
+                </option>
+                <option value="Microplastics">Microplastics</option>
+                <option value="PFAS">PFAS (Forever Chemicals)</option>
+                <option value="Dyes">Synthetic Dyes</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-slate-300"
+                >Initial Concentration (mg/L)</label
+              >
+              <input
+                type="number"
+                id="initial_concentration"
+                value="100"
+                class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm"
+              />
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-medium text-slate-300"
+                  >Nano Catalyst</label
+                >
+                <select
+                  id="nano_material"
+                  class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-slate-200"
+                >
+                  <option value="nZVI">nZVI (Zero-Valent Iron)</option>
+                  <option value="TiO2">TiO2 (Photocatalytic)</option>
+                  <option value="CNT">CNT (Carbon Nanotubes)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-300"
+                  >Nano Dosage (mg/L)</label
+                >
+                <input
+                  type="number"
+                  id="nano_dosage"
+                  value="20"
+                  class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-medium text-slate-300"
+                  >UV Light (mW/cm²)</label
+                >
+                <input
+                  type="number"
+                  id="uv_intensity"
+                  value="15"
+                  class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-300"
+                  >Biomass Density (mg/L)</label
+                >
+                <input
+                  type="number"
+                  id="biomass_density"
+                  value="500"
+                  class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-medium text-slate-300"
+                  >Contact Time (min)</label
+                >
+                <input
+                  type="number"
+                  id="contact_time"
+                  value="60"
+                  class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-300"
+                  >pH Level</label
+                >
+                <input
+                  type="number"
+                  step="0.1"
+                  id="ph"
+                  value="7.2"
+                  class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              class="w-full bg-teal-600 hover:bg-teal-500 text-white font-semibold py-2 rounded transition"
+            >
+              Run & Log Simulation
+            </button>
+          </form>
+        </div>
+
+        <!-- Dashboard Analytics -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Metrics Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
+            <div class="bg-slate-800 p-3 rounded-xl border border-slate-700">
+              <span class="text-[10px] uppercase font-semibold text-slate-400"
+                >Effluent Conc.</span
+              >
+              <div
+                id="metric-effluent"
+                class="text-xl font-bold text-teal-400 mt-1"
+              >
+                0 mg/L
+              </div>
+            </div>
+            <div class="bg-slate-800 p-3 rounded-xl border border-slate-700">
+              <span class="text-[10px] uppercase font-semibold text-slate-400"
+                >Total Removal</span
+              >
+              <div
+                id="metric-total-eff"
+                class="text-xl font-bold text-emerald-400 mt-1"
+              >
+                0%
+              </div>
+            </div>
+            <div class="bg-slate-800 p-3 rounded-xl border border-slate-700">
+              <span class="text-[10px] uppercase font-semibold text-slate-400"
+                >Bio-Viability</span
+              >
+              <div
+                id="metric-viability"
+                class="text-xl font-bold text-cyan-400 mt-1"
+              >
+                0%
+              </div>
+            </div>
+            <div class="bg-slate-800 p-3 rounded-xl border border-slate-700">
+              <span class="text-[10px] uppercase font-semibold text-slate-400"
+                >Nano Leaching</span
+              >
+              <div
+                id="metric-leaching"
+                class="text-xl font-bold text-amber-400 mt-1"
+              >
+                0 mg/L
+              </div>
+            </div>
+            <div class="bg-slate-800 p-3 rounded-xl border border-slate-700">
+              <span class="text-[10px] uppercase font-semibold text-slate-400"
+                >Req. Contact Time</span
+              >
+              <div
+                id="metric-required-time"
+                class="text-xl font-bold text-amber-400 mt-1"
+              >
+                --
+              </div>
+            </div>
+            <div class="bg-slate-800 p-3 rounded-xl border border-slate-700">
+              <span class="text-[10px] uppercase font-semibold text-slate-400"
+                >Min Req. Dosage</span
+              >
+              <div
+                id="metric-required-dosage"
+                class="text-xl font-bold text-teal-400 mt-1"
+              >
+                --
+              </div>
+            </div>
+          </div>
+
+          <!-- EPA Water Safety Banner -->
+          <div
+            id="safety-banner"
+            class="hidden p-4 rounded-xl border flex flex-col gap-1 transition"
+          >
+            <div class="flex items-center justify-between">
+              <h4
+                id="safety-title"
+                class="font-bold text-sm tracking-wide"
+              ></h4>
+              <span
+                id="safety-limit-tag"
+                class="text-xs font-mono bg-slate-900/60 px-2 py-0.5 rounded border border-slate-700"
+              ></span>
+            </div>
+            <p id="safety-message" class="text-xs opacity-90"></p>
+          </div>
+
+          <!-- Chart Box -->
+          <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-base font-semibold text-teal-300">
+                Simulation Dynamics
+              </h3>
+              <div class="flex gap-2 no-print">
+                <button
+                  onclick="exportCSV()"
+                  class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold rounded border border-slate-600 transition"
+                >
+                  📥 CSV
+                </button>
+                <button
+                  onclick="exportPDF()"
+                  class="px-3 py-1 bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold rounded transition"
+                >
+                  📄 Print PDF
+                </button>
+              </div>
+            </div>
+            <div class="h-64">
+              <canvas id="nanoChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project History Table -->
+      <div
+        id="history-table-container"
+        class="bg-slate-800 p-6 rounded-xl border border-slate-700"
+      >
+        <h3 class="text-lg font-semibold text-teal-300 mb-4">
+          📊 Project Data History
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-900 uppercase text-slate-400">
+              <tr>
+                <th class="p-2">ID</th>
+                <th class="p-2">Project</th>
+                <th class="p-2">Contaminant</th>
+                <th class="p-2">Nano Catalyst</th>
+                <th class="p-2">Dosage</th>
+                <th class="p-2">Effluent Conc.</th>
+                <th class="p-2">Removal %</th>
+                <th class="p-2">Bio-Viability</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body" class="divide-y divide-slate-700">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <script src="/static/js/app.js"></script>
+  </body>
+</html>
