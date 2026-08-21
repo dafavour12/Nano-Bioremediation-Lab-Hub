@@ -11,7 +11,8 @@ import csv
 import io
 
 app = FastAPI(
-    title="Nano-Bioremediation Simulator with Compliance & Data Storage")
+    title="Nano-Bioremediation Simulator with Compliance & Data Storage"
+)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
@@ -38,8 +39,8 @@ async def serve_dashboard(request: Request):
 async def run_and_save_simulation(data: SimulationRequest, db: Session = Depends(get_db)):
     # 1. Compute Simulation Results (includes EPA safety limits & optimization metrics)
     sim_output = simulate_nano_bioremediation(data.model_dump())
-    results = sim_output["simulation_results"]
-    compliance = sim_output["compliance_and_optimization"]
+    results = sim_output.get("simulation_results", {})
+    compliance = sim_output.get("compliance_and_optimization", {})
 
     # 2. Save Input + Output into Database
     record = SimulationRecord(
@@ -52,16 +53,17 @@ async def run_and_save_simulation(data: SimulationRequest, db: Session = Depends
         biomass_density=data.biomass_density,
         contact_time=data.contact_time,
         ph=data.ph,
-        effluent_concentration=results["effluent_concentration_mg_L"],
-        total_removal_efficiency=results["total_removal_efficiency_pct"],
-        nano_phase_efficiency=results["nano_phase_efficiency_pct"],
-        bio_phase_efficiency=results["bio_phase_efficiency_pct"],
-        bio_viability=results["bio_viability_pct"],
-        nano_leaching=results["nano_leaching_mg_L"],
-        epa_mcl=compliance["epa_mcl_mg_L"],
-        is_compliant=compliance["is_compliant"],
-        min_required_dosage=compliance["min_required_dosage_mg_L"],
-        required_contact_time=compliance["required_contact_time_min"]
+        effluent_concentration=results.get("effluent_concentration_mg_L", 0.0),
+        total_removal_efficiency=results.get(
+            "total_removal_efficiency_pct", 0.0),
+        nano_phase_efficiency=results.get("nano_phase_efficiency_pct", 0.0),
+        bio_phase_efficiency=results.get("bio_phase_efficiency_pct", 0.0),
+        bio_viability=results.get("bio_viability_pct", 0.0),
+        nano_leaching=results.get("nano_leaching_mg_L", 0.0),
+        epa_mcl=compliance.get("epa_mcl_mg_L", 0.0),
+        is_compliant=compliance.get("is_compliant", False),
+        min_required_dosage=compliance.get("min_required_dosage_mg_L", 0.0),
+        required_contact_time=compliance.get("required_contact_time_min", 0.0)
     )
     db.add(record)
     db.commit()
@@ -74,7 +76,8 @@ async def run_and_save_simulation(data: SimulationRequest, db: Session = Depends
 @app.get("/api/history")
 async def get_history(db: Session = Depends(get_db)):
     records = db.query(SimulationRecord).order_by(
-        SimulationRecord.timestamp.desc()).all()
+        SimulationRecord.timestamp.desc()
+    ).all()
     return records
 
 
@@ -84,7 +87,7 @@ async def export_csv(db: Session = Depends(get_db)):
     output = io.StringIO()
     writer = csv.writer(output)
 
-    # Updated Header including EPA compliance & optimization fields
+    # Header including EPA compliance & optimization fields
     writer.writerow([
         "ID", "Timestamp", "Project Name", "Contaminant", "Initial Conc (mg/L)",
         "Nano Material", "Nano Dosage (mg/L)", "UV Intensity (mW/cm2)",
@@ -110,7 +113,8 @@ async def export_csv(db: Session = Depends(get_db)):
         content=output.getvalue(),
         media_type="text/csv",
         headers={
-            "Content-Disposition": "attachment; filename=nano_bioremediation_data.csv"}
+            "Content-Disposition": "attachment; filename=nano_bioremediation_data.csv"
+        }
     )
 
 

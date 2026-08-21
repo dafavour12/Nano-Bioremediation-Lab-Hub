@@ -1,5 +1,5 @@
-from sqlalchemy import create_engine, Column, Integer, Float, String, DateTime
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import create_engine, Column, Integer, Float, String, DateTime, Boolean
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 import datetime
 
@@ -8,6 +8,7 @@ SQLALCHEMY_DATABASE_URL = "sqlite:///./nano_data.db"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={
                        "check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 Base = declarative_base()
 
 
@@ -33,6 +34,12 @@ class SimulationRecord(Base):
     bio_phase_efficiency = Column(Float)
     bio_viability = Column(Float)
     nano_leaching = Column(Float)
+
+    # Compliance & Optimization Data (Added to fix TypeError)
+    epa_mcl = Column(Float, nullable=True)
+    is_compliant = Column(Boolean, nullable=True)
+    min_required_dosage = Column(Float, nullable=True)
+    required_contact_time = Column(Float, nullable=True)
 
 
 Base.metadata.create_all(bind=engine)
