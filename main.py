@@ -54,8 +54,7 @@ async def run_and_save_simulation(data: SimulationRequest, db: Session = Depends
         contact_time=data.contact_time,
         ph=data.ph,
         effluent_concentration=results.get("effluent_concentration_mg_L", 0.0),
-        total_removal_efficiency=results.get(
-            "total_removal_efficiency_pct", 0.0),
+        total_removal_efficiency=results.get("total_removal_efficiency_pct", 0.0),
         nano_phase_efficiency=results.get("nano_phase_efficiency_pct", 0.0),
         bio_phase_efficiency=results.get("bio_phase_efficiency_pct", 0.0),
         bio_viability=results.get("bio_viability_pct", 0.0),
